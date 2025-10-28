@@ -58,3 +58,33 @@ const deleteTripById=(req,res)=>{
 
 module.exports
 {retrieveAllTrips,createTrip,deleteTripById};
+
+const { db } = require('../db.js');
+
+
+const query = `
+    INSERT INTO TRIP (
+        DESTINATIONNAME, LOCATION, CONTINENT, LANGUAGE, DESCRIPTION, 
+        FLIGHTCOST, ACCOMMODATIONCOST, MEALCOST, VISACOST, TRANSPORTATIONCOST, CURRENCYCODE
+    ) 
+     
+        
+    VALUES ('${destinationName}', '${location}', '${continent}', '${language}',
+      '${description}','${flightCost}','${accommodationCost}','${mealcost}', 
+      '${visacost}','${transportationCost}','${currencycode}'
+    )
+    `;
+
+    db.run(query, (err) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({
+                message: 'Database error',
+                error: err.message
+            });
+        };
+   
+        return res.status(201).json({
+            message: 'Trip created successfully'
+        });
+    });
