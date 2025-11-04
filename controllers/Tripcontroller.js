@@ -88,3 +88,5 @@ const query = `
             message: 'Trip created successfully'
         });
     });
+
+    
