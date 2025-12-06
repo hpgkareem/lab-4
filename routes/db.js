@@ -2,7 +2,7 @@ const sqlite = require('sqlite3');
 const db = new sqlite.Database('hospital.db');
 
 // New Appointment Table
-const createAppointmentTable = `CREATE TABLE IF NOT EXISTS TRIP (
+const createAppointmentTable = `CREATE TABLE IF NOT EXISTS APPOINTMENT (
   ID INTEGER PRIMARY KEY AUTOINCREMENT,
   DOCTOR_ID INTEGER NOT NULL,
   PATIENT_ID INTEGER NOT NULL,
