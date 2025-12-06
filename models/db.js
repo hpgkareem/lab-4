@@ -1,5 +1,9 @@
-const sqlite = require('sqlite3');
-const db = new sqlite.Database('hospital.db');
+// models/db.js
+const sqlite3 = require('sqlite3');
+const db = new sqlite3.Database('hospital.db');
+
+// Enable Foreign Keys
+db.get("PRAGMA foreign_keys = ON");
 
 // New Appointment Table
 const createAppointmentTable = `CREATE TABLE IF NOT EXISTS APPOINTMENT (
@@ -10,9 +14,8 @@ const createAppointmentTable = `CREATE TABLE IF NOT EXISTS APPOINTMENT (
   STATUS TEXT NOT NULL DEFAULT 'booked',
   REASON TEXT,
   CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (DOCTOR_ID) REFERENCE USER(ID),
-  FOREIGN KEY (PATIENT_ID) REFERENCE USER(ID),
-  
+  FOREIGN KEY (DOCTOR_ID) REFERENCES USER(ID),
+  FOREIGN KEY (PATIENT_ID) REFERENCES USER(ID)
 )`;
 
 // New User Table
@@ -28,15 +31,15 @@ const createUserTable = `CREATE TABLE IF NOT EXISTS USER (
   CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
 )`;
 
-// New Vist Table
-const createVisitTaple = `CREATE TABLE IF NOT EXISTS VISIT (
+// New Visit Table (Fixed Typo: Taple -> Table)
+const createVisitTable = `CREATE TABLE IF NOT EXISTS VISIT (
  ID INTEGER PRIMARY KEY AUTOINCREMENT,
  APPOINTMENT_ID INTEGER UNIQUE NOT NULL,
- COMPLAINS TEXT,
+ COMPLAINTS TEXT,
  DIAGNOSIS TEXT,
  PRESCRIPTION TEXT,
  FOLLOW_UP_REQUIRED INTEGER DEFAULT 0,
- CREATED_AT DATETIME DEFULT CURRENT_TIMESTAMP,
+ CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
  FOREIGN KEY (APPOINTMENT_ID) REFERENCES APPOINTMENT (ID)
 )`;
 
@@ -52,9 +55,9 @@ const createAuthLogTable = `CREATE TABLE IF NOT EXISTS AUTH_LOG (
 )`;
 
 module.exports = {
-  db,
-  createAppointmentTable,
-  createUserTable,
-  createVisitTaple,
-  createAuthLogTable,
+    db,
+    createAppointmentTable,
+    createUserTable,
+    createVisitTable, // Fixed naming here
+    createAuthLogTable,
 };
