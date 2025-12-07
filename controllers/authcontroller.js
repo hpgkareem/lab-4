@@ -25,7 +25,9 @@ const logAuthAttempt = (userId, email, success, ip) => {
 // POST /signup
 const signUp = (req, res) => {
     const { fullname, email, password, phone } = req.body;
+    console.log(req.body)
     const role = 'patient'; // default signup role
+
 
     if (!email || !password || !fullname) {
         return res.status(400).send('Please provide email, fullname, and password.');
