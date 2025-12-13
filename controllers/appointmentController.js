@@ -71,6 +71,7 @@ const retrieveMyAppointments = (req, res) => {
         params = [userId];
     }
      else {
+
         
         query = `
       SELECT A.ID, A.APPOINTMENT_DATE, A.STATUS, A.REASON,
