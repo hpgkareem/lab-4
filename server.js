@@ -4,6 +4,8 @@ const db = db_access.db;
 
 const PORT = 3000;
 
+// Initialize database tables
+// (Errors will be logged, but success messages are removed for a cleaner terminal)
 db.serialize(() => {
     db.run(db_access.createUserTable, (err) => {
         if (err) console.error('Error creating User table:', err.message);
