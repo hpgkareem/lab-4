@@ -17,11 +17,21 @@ app.use(cors({
     origin: 'http://localhost:5173',
 }));
 
-// 2. IMPORTANT: Parse JSON Body (ده السطر اللي كان عامل المشكلة)
+// 2. IMPORTANT: Parse JSON Body 
 app.use(express.json());
 
 // 3. Cookie Parser
 app.use(cookieParser());
+
+const path = require('path');
+
+// Serve frontend folder
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Optional: make / open login.html
+app.get('/', (req, res) => {
+  return res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
+});
 
 // Routes
 app.use('/api/v1/Appointment', AppointmentRouter);

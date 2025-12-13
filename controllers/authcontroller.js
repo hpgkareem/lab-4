@@ -23,12 +23,96 @@ const logAuthAttempt = (userId, email, success, ip) => {
 };
 
 
+// const signUp = (req, res) => {
+//     const { fullname, email, password, phone } = req.body;
+//     console.log(req.body)
+//     const role = 'patient'; 
+
+
+//     if (!email || !password || !fullname) {
+//         return res.status(400).send('Please provide email, fullname, and password.');
+//     }
+
+//     if (!isValidEmail(email)) {
+//         return res.status(400).send('Invalid email format.');
+//     }
+
+//     if (password.length < 8) {
+//         return res.status(400).send('Password must be at least 8 characters');
+//     }
+
+    
+//     const checkQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
+//     db.get(checkQuery, [email], (err, existing) => {
+//         if (err) {
+//             console.error('Database Check Error:', err);
+//             return res.status(500).send('Database error.');
+//         }
+
+//         if (existing) {
+//             return res.status(400).send('Email already exists.');
+//         }
+
+        
+//         bcrypt.hash(password, 10, (hashErr, hashedPassword) => {
+//             if (hashErr) {
+//                 console.error('Hashing Error:', hashErr);
+//                 return res.status(500).send('Error hashing password.');
+//             }
+
+//             const insertQuery = `
+//         INSERT INTO USER (FULL_NAME, EMAIL, PASSWORD, ROLE, PHONE)
+//         VALUES (?, ?, ?, ?, ?)
+//       `;
+
+//             db.run(
+//                 insertQuery, [fullname, email, hashedPassword, role, phone || null],
+//                 function(insertErr) {
+//                     if (insertErr) {
+//                         console.error('Insert Error:', XHinsertErr);
+//                         return res.status(500).send('Database error during registration');
+//                     }
+
+//                     const newUserId = this.lastID;
+//                     const token = signToken(newUserId, role);
+
+                    
+//                     res.cookie('jwt', token, {
+//                         httpOnly: true,
+//                         secure: false, 
+//                         maxAge: 90 * 24 * 60 * 60 * 1000,
+//                     });
+
+//                     return res.status(201).json({
+//                         status: 'success',
+//                         message: 'Patient registered successfully',
+//                         user: { id: newUserId, fullname, email, role, phone: phone || null },
+//                         token,
+//                     });
+//                 }
+//             );
+//         });
+//     });
+// };
+// --- SIGN UP ---
 const signUp = (req, res) => {
-    const { fullname, email, password, phone } = req.body;
-    console.log(req.body)
-    const role = 'patient'; 
+    const {
+        fullname,
+        email,
+        password,
+        phone,
+        role,
+        specialization,
+        license_number
+    } = req.body;
 
+    // ✅ role from request (default patient)
+    const allowedRoles = new Set(['patient', 'doctor', 'admin']);
+    const finalRole = allowedRoles.has(String(role || '').toLowerCase())
+        ? String(role).toLowerCase()
+        : 'patient';
 
+    // ✅ basic validation
     if (!email || !password || !fullname) {
         return res.status(400).send('Please provide email, fullname, and password.');
     }
@@ -41,7 +125,16 @@ const signUp = (req, res) => {
         return res.status(400).send('Password must be at least 8 characters');
     }
 
-    
+    // ✅ doctor-only validation (optional but recommended)
+    if (finalRole === 'doctor') {
+        if (!specialization || !license_number) {
+            return res
+                .status(400)
+                .send('Please provide specialization and license_number for doctors.');
+        }
+    }
+
+    // ✅ check existing
     const checkQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
     db.get(checkQuery, [email], (err, existing) => {
         if (err) {
@@ -53,40 +146,65 @@ const signUp = (req, res) => {
             return res.status(400).send('Email already exists.');
         }
 
-        
+        // ✅ hash password
         bcrypt.hash(password, 10, (hashErr, hashedPassword) => {
             if (hashErr) {
                 console.error('Hashing Error:', hashErr);
                 return res.status(500).send('Error hashing password.');
             }
 
+            // ✅ include doctor fields (if your DB has these columns)
             const insertQuery = `
-        INSERT INTO USER (FULL_NAME, EMAIL, PASSWORD, ROLE, PHONE)
-        VALUES (?, ?, ?, ?, ?)
-      `;
+                INSERT INTO USER (FULL_NAME, EMAIL, PASSWORD, ROLE, SPECIALIZATION, LICENSE_NUMBER, PHONE)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            const finalSpecialization = finalRole === 'doctor' ? (specialization || null) : null;
+            const finalLicenseNumber = finalRole === 'doctor' ? (license_number || null) : null;
 
             db.run(
-                insertQuery, [fullname, email, hashedPassword, role, phone || null],
-                function(insertErr) {
+                insertQuery,
+                [
+                    fullname,
+                    email,
+                    hashedPassword,
+                    finalRole,
+                    finalSpecialization,
+                    finalLicenseNumber,
+                    phone || null
+                ],
+                function (insertErr) {
                     if (insertErr) {
-                        console.error('Insert Error:', XHinsertErr);
+                        console.error('Insert Error:', insertErr);
                         return res.status(500).send('Database error during registration');
                     }
 
                     const newUserId = this.lastID;
-                    const token = signToken(newUserId, role);
+                    const token = signToken(newUserId, finalRole);
 
-                    
                     res.cookie('jwt', token, {
                         httpOnly: true,
-                        secure: false, 
+                        secure: false,
                         maxAge: 90 * 24 * 60 * 60 * 1000,
                     });
 
                     return res.status(201).json({
                         status: 'success',
-                        message: 'Patient registered successfully',
-                        user: { id: newUserId, fullname, email, role, phone: phone || null },
+                        message:
+                            finalRole === 'doctor'
+                                ? 'Doctor registered successfully'
+                                : finalRole === 'admin'
+                                    ? 'Admin registered successfully'
+                                    : 'Patient registered successfully',
+                        user: {
+                            id: newUserId,
+                            fullname,
+                            email,
+                            role: finalRole,
+                            specialization: finalSpecialization,
+                            license_number: finalLicenseNumber,
+                            phone: phone || null
+                        },
                         token,
                     });
                 }
