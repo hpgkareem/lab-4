@@ -57,16 +57,21 @@ const retrieveMyAppointments = (req, res) => {
         params = [userId];
     } else if (role === 'doctor') {
         query = `
-      SELECT A.ID, A.APPOINTMENT_DATE, A.STATUS, A.REASON,
-             P.FULL_NAME AS PATIENT_NAME
-      FROM APPOINTMENT A
-      JOIN USER P ON A.PATIENT_ID = P.ID
-      WHERE A.DOCTOR_ID = ?
-      ORDER BY A.APPOINTMENT_DATE DESC
-    `;
+          SELECT A.ID,
+                 A.APPOINTMENT_DATE,
+                 A.STATUS,
+                 A.REASON,
+                 P.FULL_NAME AS PATIENT_NAME,
+                 P.ID AS PATIENT_ID       
+          FROM APPOINTMENT A
+          JOIN USER P ON A.PATIENT_ID = P.ID
+          WHERE A.DOCTOR_ID = ?
+          ORDER BY A.APPOINTMENT_DATE DESC
+        `;
         params = [userId];
-    } else {
-        // admin sees all
+    }
+     else {
+        
         query = `
       SELECT A.ID, A.APPOINTMENT_DATE, A.STATUS, A.REASON,
              D.FULL_NAME AS DOCTOR_NAME,

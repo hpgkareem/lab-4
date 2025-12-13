@@ -19,14 +19,14 @@ const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 // Helper function to log attempts (placeholder to prevent crash)
 const logAuthAttempt = (userId, email, success, ip) => {
     console.log(`Auth Attempt -> Email: ${email}, Success: ${success}, IP: ${ip}`);
-    // In future, you can insert this into the AUTH_LOG table in DB
+   
 };
 
-// POST /signup
+
 const signUp = (req, res) => {
     const { fullname, email, password, phone } = req.body;
     console.log(req.body)
-    const role = 'patient'; // default signup role
+    const role = 'patient'; 
 
 
     if (!email || !password || !fullname) {
@@ -41,7 +41,7 @@ const signUp = (req, res) => {
         return res.status(400).send('Password must be at least 8 characters');
     }
 
-    // Check existing user
+    
     const checkQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
     db.get(checkQuery, [email], (err, existing) => {
         if (err) {
@@ -53,7 +53,7 @@ const signUp = (req, res) => {
             return res.status(400).send('Email already exists.');
         }
 
-        // Hash Password
+        
         bcrypt.hash(password, 10, (hashErr, hashedPassword) => {
             if (hashErr) {
                 console.error('Hashing Error:', hashErr);
@@ -76,10 +76,10 @@ const signUp = (req, res) => {
                     const newUserId = this.lastID;
                     const token = signToken(newUserId, role);
 
-                    // Set cookie (optional)
+                    
                     res.cookie('jwt', token, {
                         httpOnly: true,
-                        secure: false, // set to true in production
+                        secure: false, 
                         maxAge: 90 * 24 * 60 * 60 * 1000,
                     });
 
@@ -116,7 +116,6 @@ const login = (req, res) => {
             return res.status(401).send('Invalid credentials');
         }
 
-        // Compare the hashed password
         bcrypt.compare(password, row.PASSWORD, (compareErr, isMatch) => {
             if (compareErr) {
                 console.error(compareErr);
@@ -128,7 +127,6 @@ const login = (req, res) => {
                 return res.status(401).send('Invalid credentials');
             }
 
-            // Generate JWT token for successful login
             const token = signToken(row.ID, row.ROLE);
             logAuthAttempt(row.ID, email, true, req.ip);
 
@@ -151,6 +149,25 @@ const login = (req, res) => {
     });
 };
 
+const getMyProfile = (req, res) => {
+    const token = req.cookies.jwt;
+   
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        db.get(
+            "SELECT * FROM USER WHERE ID = ?",
+            [decoded.id],
+            (err, user) => {
+                if(err || !user) return res.json({ user: null });
+                res.json({ user });
+            }
+        );
+    } catch {
+        res.json({ user: null});
+    }
+};
+
 // --- VERIFY TOKEN MIDDLEWARE ---
 const verifyToken = (req, res, next) => {
     let token = null;
@@ -168,7 +185,6 @@ const verifyToken = (req, res, next) => {
         return res.status(403).send('Access denied: token missing');
     }
 
-    // Use the same helper to get the secret key
     jwt.verify(token, getSecretKey(), (err, decoded) => {
         if (err) {
             return res.status(403).send('Invalid or expired token');
@@ -197,4 +213,4 @@ const verifyDoctor = (req, res, next) => {
     });
 };
 
-module.exports = { signUp, login, verifyToken, verifyAdmin, verifyDoctor };
+module.exports = { signUp, login, verifyToken, verifyAdmin, verifyDoctor, getMyProfile };

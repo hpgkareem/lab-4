@@ -1,27 +1,26 @@
-// routes/visitRoutes.js
 const express = require('express');
 const {
     createVisit,
     getPatientVisits,
 } = require('../controllers/visitController.js');
 
-const { verifyDoctor, verifyAdmin } = require('../controllers/authcontroller.js');
+const { verifyDoctor, verifyAdmin, verifyToken } = require('../controllers/authcontroller.js');
 
 const visitRouter = express.Router();
 
 // doctor creates visit records
 visitRouter.post('/', verifyDoctor, createVisit);
 
-// doctor or admin can view patient visit history
-visitRouter.get('/patient/:patientId', (req, res, next) => {
-    // allow doctor or admin
-    verifyDoctor(req, res, (err) => {
-        if (!err) return getPatientVisits(req, res);
+const allowDoctorOrAdmin = (req, res, next) => {
+    verifyToken(req, res, () => {
+        if (req.user.role === 'doctor' || req.user.role === 'admin') {
+            return next();
+        }
+        return res.status(403).send('Access denied: Doctors or Admins only');
     });
+};
 
-    verifyAdmin(req, res, (err) => {
-        if (!err) return getPatientVisits(req, res);
-    });
-});
+// doctor or admin can view patient visit history
+visitRouter.get('/patient/:patientId', allowDoctorOrAdmin, getPatientVisits);
 
 module.exports = visitRouter;

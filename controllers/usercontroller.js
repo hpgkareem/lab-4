@@ -37,26 +37,6 @@ const retrieveAllDoctors = (req, res) => {
     });
 };
 
-const getMyProfile = (req, res) => {
-    const query = `
-    SELECT ID, FULL_NAME, EMAIL, ROLE, SPECIALIZATION, LICENSE_NUMBER, PHONE, CREATED_AT
-    FROM USER
-    WHERE ID = ?
-  `;
-    db.get(query, [req.user.id], (err, row) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ message: 'Error retrieving profile' });
-        }
-        if (!row) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        return res.status(200).json({
-            message: 'Profile retrieved successfully',
-            data: row,
-        });
-    });
-};
 
 
 const createUser = (req, res) => {
@@ -125,5 +105,5 @@ module.exports = {
     createUser,
     retrieveAllUsers,
     retrieveAllDoctors,
-    getMyProfile,
+    
 };

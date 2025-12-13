@@ -4,14 +4,13 @@ const userRouter = express.Router();
 const {createUser,
     retrieveAllUsers,
     retrieveAllDoctors,
-    getMyProfile } = require('../controllers/usercontroller.js');
-
+     } = require('../controllers/usercontroller.js');
+     const { verifyToken } = require('../controllers/authcontroller.js');
 userRouter
     .route('/')
-    .get(retrieveAllDoctors)
-    .get(getMyProfile)
     .get(retrieveAllUsers)
     .post(createUser);
-    
+    userRouter.get('/doctors', retrieveAllDoctors);
+
 
 module.exports = userRouter;

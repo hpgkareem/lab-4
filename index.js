@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+
 const AppointmentRouter = require('./routes/appointmentRoutes.js');
 const userRouter = require('./routes/userRoutes.js');
 const authRouter = require('./routes/authRoutes.js');
@@ -12,23 +14,27 @@ dotenv.config();
 
 const app = express();
 
-// 1. CORS Middleware
+// CORS (you can even remove origin restriction if frontend is same origin)
 app.use(cors({
-    origin: 'http://localhost:5173',
+  origin: 'http://localhost:3000', 
+  credentials: true,
 }));
 
-// 2. IMPORTANT: Parse JSON Body (ده السطر اللي كان عامل المشكلة)
+// Parse JSON
 app.use(express.json());
 
-// 3. Cookie Parser
+// Cookies
 app.use(cookieParser());
 
-// Routes
+// 🔹 Serve static frontend files from /frontend
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// 🔹 API Routes (note: these start with /api/...)
 app.use('/api/v1/Appointment', AppointmentRouter);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/visit', visitRouter);
 
 module.exports = {
-    app,
+  app,
 };
